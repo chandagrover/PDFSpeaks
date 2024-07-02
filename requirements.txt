@@ -1,5 +1,5 @@
 #chainlit==1.0.200
-wheel
+
 chainlit
 langchain
 langchain_community
@@ -9,3 +9,7 @@ groq
 langchain-groq
 ollama
 python-dotenv
+
+
+wheel
+pysqlite3-binary

@@ -17,16 +17,13 @@ groq_api_key='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'
 
 # Initializing GROQ chat with provided API key, model name, and settings
 llm_groq = ChatGroq(
-            groq_api_key=groq_api_key, model_name="llama3-70b-8192",  #mixtral-8x7b-32768    #llama3-70b-8192   #gemma-7b-it   #llama3-70b-8192
+            groq_api_key=groq_api_key, model_name="llama3-8b-8192",  #mixtral-8x7b-32768    #llama3-70b-8192   #gemma-7b-it   #llama3-8b-8192
                          temperature=0.2)
 
 
 @cl.on_chat_start
 async def on_chat_start():
     files = None #Initialize variable to store uploaded files
-    
-    # default_file_path='/home/phdcs2/Hard_Disk/Projects/chatgpt/Multi-PDF-llama3Chat/file/'
-    # files = [{"name": os.path.basename(default_file_path), "path": default_file_path}].send()
 
     # Wait for the user to upload files
     while files is None:
@@ -58,8 +55,6 @@ async def on_chat_start():
         # Create a metadata for each chunk
         file_metadatas = [{"source": f"{i}-{file.name}"} for i in range(len(file_texts))]
         metadatas.extend(file_metadatas)
-    print(type(metadatas))
-    print(type(file_metadatas))
 
     # Create a Chroma vector store
     embeddings = OllamaEmbeddings(model="nomic-embed-text")
@@ -124,15 +119,9 @@ async def main(message: cl.Message):
         source_names = [text_el.name for text_el in text_elements]
         
          # Add source references to the answer
-        # if source_names:
-        #     answer += f"\nSources: {', '.join(source_names)}"
-        # else:
-        #     answer += "\nNo sources found"
+        if source_names:
+            answer += f"\nSources: {', '.join(source_names)}"
+        else:
+            answer += "\nNo sources found"
     #return results
-    await cl.Message(content=answer).send()
-
-    # await cl.Message(content=answer, elements=text_elements).send()
-# 
-if __name__ == "__main__":
-    from chainlit.cli import run_chainlit
-    run_chainlit(__file__)
+    await cl.Message(content=answer, elements=text_elements).send()
