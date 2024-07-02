@@ -12,7 +12,8 @@ import os
 # Loading environment variables from .env file
 load_dotenv() 
 # Function to initialize conversation chain with GROQ language model
-groq_api_key = os.environ['GROQ_API_KEY']
+# groq_api_key = os.environ['GROQ_API_KEY']
+groq_api_key='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'
 
 # Initializing GROQ chat with provided API key, model name, and settings
 llm_groq = ChatGroq(
