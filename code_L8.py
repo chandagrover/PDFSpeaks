@@ -3,7 +3,8 @@ from langchain_community.embeddings import OllamaEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain.chains import ConversationalRetrievalChain
-from langchain.memory import ChatMessageHistory, ConversationBufferMemory
+from langchain.memory import ConversationBufferMemory
+from langchain_community.chat_message_histories import ChatMessageHistory
 import chainlit as cl
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv
@@ -17,7 +18,7 @@ groq_api_key='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'
 
 # Initializing GROQ chat with provided API key, model name, and settings
 llm_groq = ChatGroq(
-            groq_api_key=groq_api_key, model_name="llama3-8b-8192",  #mixtral-8x7b-32768    #llama3-70b-8192   #gemma-7b-it   #llama3-8b-8192
+            groq_api_key=groq_api_key, model_name="llama3-70b-8192",  #mixtral-8x7b-32768    #llama3-70b-8192   #gemma-7b-it   #llama3-8b-8192
                          temperature=0.2)
 
 
@@ -73,26 +74,28 @@ async def on_chat_start():
         return_messages=True,
     )
 
+
     # Create a chain that uses the Chroma vector store
     chain = ConversationalRetrievalChain.from_llm(
         llm=llm_groq,
         chain_type="stuff",
         retriever=docsearch.as_retriever(),
         memory=memory,
-        return_source_documents=True,
+        return_source_documents=False,
+        # return_source_documents=True,
     )
     
     # Sending an image with the number of files
     elements = [
-    cl.Image(name="image", display="inline", path="pic.png")
+    cl.Image(name="image", display="inline", path="pic.jpg")
     ]
     # Inform the user that processing has ended.You can now chat.
-    msg = cl.Message(content=f"Uploaded {len(files)} files... Files are:  You can now start ask questions!",elements=elements)
+    msg = cl.Message(content=f"Processing {len(files)} files done. You can now ask questions!")
+    # msg = cl.Message(content=f"Processing {len(files)} files done. You can now ask questions!",elements=elements)
     await msg.send()
 
     #store the chain in user session
     cl.user_session.set("chain", chain)
-
 
 @cl.on_message
 async def main(message: cl.Message):
@@ -104,24 +107,77 @@ async def main(message: cl.Message):
     # call the chain with user's message content
     res = await chain.ainvoke(message.content, callbacks=[cb])
     answer = res["answer"]
-    source_documents = res["source_documents"] 
+    # source_documents = res["source_documents"] 
 
-    text_elements = [] # Initialize list to store text elements
+    # text_elements = [] # Initialize list to store text elements
     
     # Process source documents if available
-    if source_documents:
-        for source_idx, source_doc in enumerate(source_documents):
-            source_name = f"source_{source_idx}"
+    # if source_documents:
+        # for source_idx, source_doc in enumerate(source_documents):
+            # source_name = f"source_{source_idx}"
             # Create the text element referenced in the message
-            text_elements.append(
-                cl.Text(content=source_doc.page_content, name=source_name)
-            )
-        source_names = [text_el.name for text_el in text_elements]
+            # text_elements.append(
+                # cl.Text(content=source_doc.page_content, name=source_name)
+            # )
+        # source_names = [text_el.name for text_el in text_elements]
         
          # Add source references to the answer
-        if source_names:
-            answer += f"\nSources: {', '.join(source_names)}"
-        else:
-            answer += "\nNo sources found"
+        # if source_names:
+            # answer += f"\nSources: {', '.join(source_names)}"
+        # else:
+            # answer += "\nNo sources found"
     #return results
-    await cl.Message(content=answer, elements=text_elements).send()
+    await cl.Message(content=answer).send()
+    # await cl.Message(content=answer, elements=text_elements).send()
+#     # Create a chain that uses the Chroma vector store
+#     chain = ConversationalRetrievalChain.from_llm(
+#         llm=llm_groq,
+#         chain_type="stuff",
+#         retriever=docsearch.as_retriever(),
+#         memory=memory,
+#         return_source_documents=True,
+#     )
+    
+#     # Sending an image with the number of files
+#     elements = [
+#     cl.Image(name="image", display="inline", path="pic.png")
+#     ]
+#     # Inform the user that processing has ended.You can now chat.
+#     msg = cl.Message(content=f"Uploaded {len(files)} files... Files are:  You can now start ask questions!",elements=elements)
+#     await msg.send()
+
+#     #store the chain in user session
+#     cl.user_session.set("chain", chain)
+
+
+# @cl.on_message
+# async def main(message: cl.Message):
+#      # Retrieve the chain from user session
+#     chain = cl.user_session.get("chain") 
+#     #call backs happens asynchronously/parallel 
+#     cb = cl.AsyncLangchainCallbackHandler()
+    
+#     # call the chain with user's message content
+#     res = await chain.ainvoke(message.content, callbacks=[cb])
+#     answer = res["answer"]
+#     source_documents = res["source_documents"] 
+
+#     text_elements = [] # Initialize list to store text elements
+    
+#     # Process source documents if available
+#     if source_documents:
+#         for source_idx, source_doc in enumerate(source_documents):
+#             source_name = f"source_{source_idx}"
+#             # Create the text element referenced in the message
+#             text_elements.append(
+#                 cl.Text(content=source_doc.page_content, name=source_name)
+#             )
+#         source_names = [text_el.name for text_el in text_elements]
+        
+#          # Add source references to the answer
+#         if source_names:
+#             answer += f"\nSources: {', '.join(source_names)}"
+#         else:
+#             answer += "\nNo sources found"
+#     #return results
+#     await cl.Message(content=answer, elements=text_elements).send()
